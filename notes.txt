@@ -1,0 +1,32 @@
+# Check interface
+ifconfig
+
+# Change MAC address
+# Note: this only changes in memory, not physically. Should reset once the device restarts
+# ----------------------------------------------
+ifconfig [name of interface] down # disable the interface
+ifconfig [name of interface] hw ether [new mac address] 
+ifconfig [name of interface] up 
+
+
+# Check wireless interface
+iwconfig
+
+# Change from managed (default) to monitor (can be used to capture packages in range)
+ifcondig [name of interface] down
+aairmon -ng check kill # disable wireless connection
+iwconfig [name of interface] mode monitor
+ifconfig [name of interface] up
+
+
+#--------------------------------------
+Pre Connection Attacks
+#--------------------------------------
+
+# Packet Sniffing basics (Using Airodump-ng)
+Airodump-ng is a packet sniffer
+Used to capture all packets within range
+Display detailed info about networks around us
+
+Steps:
+- Enable moniitor mode on wireless adapter

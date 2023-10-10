@@ -71,6 +71,125 @@ Display detailed info about networks around us
 
 
 
+#--------------------------------------
+Gaining Access
+#--------------------------------------
+
+1. WEP (Wired Equivalent Privacy)Cracking:
+	- Encryption -> using IV (Initialisation Vector = random 24 bits+password, add to info = packet). Packets sent will contain the IV. The router already has the password so password is not sent.
+	- Weakness: IV is in plain text, listeners can see the IV and use statistical attacks to decrypt
+
+	We need to:
+	a. Capture a large number of packets/IVs (using airodump-ng)
+	b. Analyse the captured IVs and crack the key (using aircrack-ng)
+
+	Steps: 
+	a. Use preconnection attack #2
+		-on the #Data column -> num of useful packets that use different IVs that we can use in order to crack the key
+	b. Use another terminal, 
+		aircrack-ng [filename produced in a, .cap file]  
+	c. Key Found
+	d. (i) Connect to the network using ASCII password (not always going to appear)
+								OR
+	   (ii) Connect using the numbered keys (always going to appear) #Can connect from Kali, but when enable monitor mode we kill a lot of processes and when restart the processes getting connected to target can be buggy. Best to restart Kali and connect. 
+	   		- Remove the colons
+	   		- Use this number as password whhen connecting
+
+	PROBLEM:
+	If network is not bus, it would take some time to capture enough IVs
+	Solution:
+	Force the AP to generate new IVs
+		Use fake authentication
+		- Assosciate with the AP before launching the attack
+			Terminal 1:
+				- airodump-ng the network, see that #Data is not increasing by much
+			Terminal 2:
+				- aireplay-ng --fakeauth [0, this is the interval and we only want to do this once] -a [MAC address of the target network] -h [MAC address of wireless adapter, get from ifconfig, take first 12 digits of unspec, replace "-" with colon] [name of wireless adapter, e.g. mon0]
+				# we are not yet connected to the network, only assosicated so we can communicate with it.
+				See that in terminal #1 we can see a new client (attacker) is there
+				After assosciating, we can force AP to generate new packets
+
+	ARP Request Replay (have to assosicate first)
+		- Wait for ARP packet
+		- Capture it and replay it
+		- This causes AP to produce another packet with new IV
+		- Keep doing this to get enough IVs and do steps
+
+		Use aireplay-ng --arpreplay -b [MAC address of the target network] -h [MAC address of wireless adapter, get from ifconfig, take first 12 digits of unspec, replace "-" with colon] [name of wireless adapter, e.g. mon0] # similar to above
+
+		Once ARP packet is captured and replayed, the router is forced to generate a new packet with new IVs every time and #Data increases significantly faster
+
+		Then use step b. #The IV length can be modified (64 or 128 bits) so it may take longer.
+
+
+
+2. WPA and WPA2 cracking: (this method will work with the same method)
+	- Much more secure than WEP
+	- Each packet is encrypted using a unique temporary key
+	- The only packets that can aid with the cracking process are the handshake packets (4 packets)
+
+	WPS is a feature that can be used with WPA and WPA2, which allows clients to connect without the password
+
+	ONLY IF WPS IS ENABLED AND MISCONFIGURED(needs to be configured to use a normal pin authentication, not PBC): # worth a try every time
+	- Usually used by printers, press a button and it connects to the network using an 8 digit pin
+	- Can brute force the pin and compute the actual password
+	# This only works if the router is configured not ot use the PBC (push button authentication, where the WPS pin must be pushed on the router)
+
+		- Display all networks that have WPS enabled:
+			wash --interface [interface name]
+			LCK = if WPS lock is enabled. If yes, it means that WPS will lock after a few number of tries
+		- Terminal 1:
+			- run Reaver (to brute force the pin)
+				reaver --bssid [network BSSID] --channel [channel number] --interface [wireless adapter name, e.g. mon0] [-vvv, verbose] --no-assosciate (better to do this, better success rate)
+		- Assosciate with the network
+		- Success
+		- Look for WPA PSK and use it to connect to the network
+
+
+	ELSE 
+	a. Capture a handshake
+		- Terminal #1: airodump-ng from targeted packet sniffing
+			- Wait for handshake to happen (until a new client connect to the network)
+								OR
+			- Terminal #2: deauth attack for a short period of time to an existing client so that a handshake happens
+		- WPA handshake appears on terminal #1
+		# The handshake does not contain any info to recover the key, but contains data that can  be used to chekc if a key is valid
+
+	b. Use a wordlist to bruteforce
+		- Use crunch to create one
+			crunch [min] [max] [characters that can be used] -o [FileName, .txt] -t [pattern], many more flags (look at -p too)
+			pattern -> use @ for wilidcard, e.g. a@@@b = aaaab, aaabb, azdjb, etc.
+							OR
+		- Use a premade one like rockyou
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

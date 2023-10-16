@@ -96,7 +96,7 @@ Gaining Access
 	   		- Use this number as password whhen connecting
 
 	PROBLEM:
-	If network is not bus, it would take some time to capture enough IVs
+	If network is not busy, it would take some time to capture enough IVs
 	Solution:
 	Force the AP to generate new IVs
 		Use fake authentication
@@ -155,19 +155,36 @@ Gaining Access
 		- WPA handshake appears on terminal #1
 		# The handshake does not contain any info to recover the key, but contains data that can  be used to chekc if a key is valid
 
-	b. Use a wordlist to bruteforce
+	b. Use a wordlist to bruteforce (the only known attack for WPA and WPA2)
 		- Use crunch to create one
 			crunch [min] [max] [characters that can be used] -o [FileName, .txt] -t [pattern], many more flags (look at -p too)
 			pattern -> use @ for wilidcard, e.g. a@@@b = aaaab, aaabb, azdjb, etc.
 							OR
 		- Use a premade one like rockyou
 
+		- Using aircrack-ng Separate MIC (Message Integrity Code) from handshake packet headers, use headers + prediction password from wordlist and compare to MIC. If same, then password is correct. Else, iterate through the other predictions from the wordlist. 
+			aircrack-ng [captured handshake filename, e.g. wpa_handshake-01.cap] -w [wordlist]
+
+		Ways to make it faster:
+			- use GPU instead of CPU
+			- use rainbow tables
+			- pipe wordlist as it is being created from crunch to aircrack-ng, so it does not use storage
+			- pause the cracking progress and come back after a while without losing progress 
 
 
 
+#----------------------------------------------------
+Configuring wireless settings for maximum security
+#----------------------------------------------------
+Go to router settings
+Change Security to WPA2, long password with symbols, numbers, upper and lower case letters, etc
+Turn off WPS pin authentication
+MAC filter/access control
 
 
-
+#----------------------------------------------------
+Post Connection Attacks
+#----------------------------------------------------
 
 
 
